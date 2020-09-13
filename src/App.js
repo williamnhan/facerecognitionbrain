@@ -8,12 +8,7 @@ import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 import './App.css';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
-import { API_KEY } from'./constants.js'
-
-const app = new Clarifai.App({
-  apiKey: API_KEY
-});
+import { BACK_END } from'./constants.js'
 
 const particlesOptions = {
   particles: {
@@ -27,17 +22,36 @@ const particlesOptions = {
   }
 };
 
+const initialState = {
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  }
+}
+
 class App extends Component {
   constructor() {
     super();
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedin: false
-    }
+    this.state = initialState;
   }
+
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.mail,
+      entries: data.entries,
+      joined: data.joined
+    }})
+  }
+
   calculateFaceLocation = (data) => {
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputImage');
@@ -61,11 +75,29 @@ class App extends Component {
 
   onButtonSubmit = () => {
     this.setState({imageUrl: this.state.input}, () => {
-      app.models
-        .predict(
-          Clarifai.FACE_DETECT_MODEL,
-          this.state.imageUrl)
-        .then( response => this.displayBoundingBox(this.calculateFaceLocation(response)))
+      fetch(BACK_END + 'imageUrl', {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ input: this.state.input })
+      }).then(response => response.json())
+        .then( response => {
+          console.log(response);
+          if (response) {
+            fetch( BACK_END +'image', {
+              method: 'put',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                id: this.state.user.id
+              })
+            })
+            .then(response => response.json())
+            .then(rank => {
+              this.setState(Object.assign(this.state.user, {entries: rank}))
+            })
+            .catch(console.log);
+          }
+          this.displayBoundingBox(this.calculateFaceLocation(response))
+        })
         .catch( err => console.log(err))
     });
     
@@ -73,34 +105,33 @@ class App extends Component {
 
   onRouteChange = (route) => {
     if (route === 'home') {
-      this.setState({isSignedin: true})
+      this.setState({route})
+    } else if (route === 'signout') {
+      this.setState(initialState)
     } else {
-      this.setState({isSignedin: false})
+      this.setState({route}) ;
     }
-    // this.setState({route: route});
-    this.setState({route}) ;
   }
 
   render() {
-    const { route, box, imageUrl, isSignedin} = this.state;
+    const { route, box, imageUrl, isSignedin, user} = this.state;
     return (
       <div className="App">
         <Particles className='particles'
           params={particlesOptions}
         />
         <Navigation onRouteChange={this.onRouteChange} isSignedin={isSignedin} />
-        { route === 'signin' ? 
-          <Signin onRouteChange={this.onRouteChange} />
-        : ( route === 'register' ? 
-            <Register onRouteChange={this.onRouteChange} />
-          : 
-            <div>
+        { route === 'home' 
+          ? <div>
               <Logo />
-              <Rank />
+              <Rank name={user.name} entries={user.entries} />
               <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
               <FaceRecognition imageUrl={imageUrl} box={box} />
             </div>
-          )
+          : ( route === 'signin' 
+            ? <Signin onRouteChange={this.onRouteChange} loadUser={this.loadUser} />
+            : <Register onRouteChange={this.onRouteChange} loadUser={this.loadUser} />
+            )
         }
       </div>
     );
