@@ -8,7 +8,7 @@ import Signin from './components/Signin/Signin';
 import Register from './components/Register/Register';
 import './App.css';
 import Particles from 'react-particles-js';
-import { BACK_END } from'./constants.js'
+import { BACK_END } from './constants.js';
 
 const particlesOptions = {
   particles: {
@@ -114,7 +114,8 @@ class App extends Component {
   }
 
   render() {
-    const { route, box, imageUrl, isSignedin, user} = this.state;
+    const { route, box, imageUrl, user} = this.state;
+    const isSignedin = user.id ? true : false;
     return (
       <div className="App">
         <Particles className='particles'

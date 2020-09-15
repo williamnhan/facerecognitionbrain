@@ -1,1 +1,1 @@
-export const BACK_END = 'http://localhost:3001/';
+export const BACK_END = 'https://gentle-bayou-64265.herokuapp.com/';

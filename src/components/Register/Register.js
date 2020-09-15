@@ -1,4 +1,5 @@
 import React from 'react';
+import { BACK_END } from '../../constants.js';
 
 class Register extends React.Component {
   constructor() {
@@ -28,7 +29,7 @@ class Register extends React.Component {
   }
 
   onSubmmitRegister = () => {
-    fetch('http://localhost:3001/register', {
+    fetch( BACK_END +'register', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
