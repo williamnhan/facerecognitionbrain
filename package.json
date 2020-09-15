@@ -1,6 +1,6 @@
 {
   "name": "facerecognitionbrain",
-  "homepage": "https://williamnhan.github.io/facerecognitionbrain",
+  "homepage": "https://face-recognition-brain-sample.herokuapp.com/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
